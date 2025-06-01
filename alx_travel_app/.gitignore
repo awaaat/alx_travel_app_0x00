@@ -1,0 +1,30 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.sqlite3
+
+# Environments
+env/
+venv/
+.bck_end/
+bck_end/
+.bck/
+.bck*/  # Any virtualenvs
+*.env
+*.env.*
+
+# Django stuff
+*.log
+db.sqlite3
+/staticfiles/
+/media/
+
+# VSCode or PyCharm
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
