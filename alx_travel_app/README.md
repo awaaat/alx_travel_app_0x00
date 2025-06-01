@@ -1,0 +1,1 @@
+-This is alx travel app. It is an air bnb clone, with mysql as the database. 
