@@ -37,12 +37,12 @@ class Listing(models.Model):
     description = models.TextField(null=False, blank=False)
     location = models.CharField(max_length=200, null=False, blank=False)
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False)
-    created_at = models.DateTimeField(auto_now_add= True)
+    created_at = models.DateTimeField(auto_now_add= True,)
     updated_at = models.DateTimeField(auto_now=True)
     property_images = models.ImageField(blank=False, null = False, upload_to='property_images/')
     
     class Meta:
-        indexes = [models.Index(fields=['host', 'location'])]
+        indexes = [models.Index(fields=['host', 'location'])] 
         ordering = ['-created_at']
         
 class Booking(models.Model):
@@ -110,14 +110,14 @@ class Review(models.Model):
                             default=uuid.uuid4, editable=False)
     user = models.OneToOneField(to = CustomUser, on_delete= models.CASCADE, 
                                 limit_choices_to = {'user_role': 'guest'})
-    property_listing = models.ForeignKey(to = Listing, on_delete= models.CASCADE)
+    listing = models.ForeignKey(to = Listing, on_delete= models.CASCADE)
     review_date = models.DateTimeField(auto_now_add=True)
     review_rating = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)], default=1, 
                                         blank=False, null= False)
-    comment = models.TextField(null = True, blank=True)
+    comment = models.TextField(null = True, blank=True, max_length= 250)
     
     def __str__(self):
-        return f"Property {self.property_listing.name} was awarded a {self.review_rating} review by {self.user.first_name}"
+        return f"Property {self.listing.name} was awarded a {self.review_rating} review by {self.user.first_name}"
 class Message(models.Model):
     message_id = models.UUIDField(primary_key=True, db_index=True, 
                             default=uuid.uuid4, editable=False)
@@ -125,7 +125,7 @@ class Message(models.Model):
     recipient = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='received_messages')
     sent_at = models.DateTimeField(auto_now_add=True)
     message_title = models.TextField(null=False, blank=False, max_length=30)
-    message_body = models.TextField(null=False, blank=False)
+    message_body = models.TextField(null=False, blank=False, max_length=250)
     
     def __str__(self) -> str:
         return f"Message {self.message_title} from {self.sender}"
