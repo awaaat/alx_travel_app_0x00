@@ -37,6 +37,11 @@ INSTALLED_APPS = [
     'drf_yasg',
     'listings',  
 ]
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  

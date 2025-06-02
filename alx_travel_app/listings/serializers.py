@@ -25,14 +25,14 @@ class ListingSerializer(serializers.ModelSerializer):
         )
 class BookingSerializer(serializers.ModelSerializer):
     
-    listing = serializers.SerializerMethodField()
-    user = serializers.SerializerMethodField()
+    listing = ListingSerializer(read_only = True)
+    user = CustomUserSerializer(read_only = True)
     total_price = serializers.SerializerMethodField()
     
     def get_listing(self, obj):
         return ListingSerializer(obj.listing).data
     def get_user(self, obj):
-        return CustomUserSerializer(obj.listing).data
+        return CustomUserSerializer(obj.user).data
     
     class Meta:
         model = Booking
@@ -47,24 +47,24 @@ class BookingSerializer(serializers.ModelSerializer):
             'total_price'
         )
         
-        def get_total_price(self, obj):
-            return obj.get_total_price
+    def get_total_price(self, obj):
+        return obj.get_total_price
         
-        def validate(self, data):
-            start = data.get('start_date')
-            end = data.get('end_date')
-            if start and end and end <= start:
-                raise serializers.ValidationError("End date must be after start date.")
-            listing = data.get('listing')
-            if listing and not Listing.objects.filter(property_id=listing.property_id).exists():
-                raise serializers.ValidationError("Invalid listing.")
-            user = data.get('user')
-            if user and not CustomUser.objects.filter(user_id=user.user_id, user_role='guest').exists():
-                raise serializers.ValidationError("Invalid user or user is not a guest.")
-            return data
+    def validate(self, data):
+        start = data.get('start_date')
+        end = data.get('end_date')
+        if start and end and end <= start:
+            raise serializers.ValidationError("End date must be after start date.")
+        listing = data.get('listing')
+        if listing and not Listing.objects.filter(property_id=listing.property_id).exists():
+            raise serializers.ValidationError("Invalid listing.")
+        user = data.get('user')
+        if user and not CustomUser.objects.filter(user_id=user.user_id, user_role='guest').exists():
+            raise serializers.ValidationError("Invalid user or user is not a guest.")
+        return data
         
 class PaymentSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField()
+    user = CustomUserSerializer(read_only = True)
     
     def get_user(self, obj):
         return CustomUserSerializer(obj.user).data
@@ -80,20 +80,20 @@ class PaymentSerializer(serializers.ModelSerializer):
         'payment_method',
         )
         
-        def validate_amount(self, value):
-            if value <= 0:
-                serializers.ValidationError("Amount cannot be 0 or less than zero")
-            return value
-        def validate(self, data):
-            booking = data.get('booking_id')
-            amount = data.get('amount')
-            if booking and amount and booking.total_price != amount:
-                raise serializers.ValidationError("Payment amount must match booking total price.")
-            return data
+    def validate_amount(self, value):
+        if value <= 0:
+            serializers.ValidationError("Amount cannot be 0 or less than zero")
+        return value
+    def validate(self, data):
+        booking = data.get('booking_id')
+        amount = data.get('amount')
+        if booking and amount and booking.total_price != amount:
+            raise serializers.ValidationError("Payment amount must match booking total price.")
+        return data
         
 class ReviewSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField()
-    listing = serializers.SerializerMethodField()
+    user = CustomUserSerializer(read_only = True)
+    listing = ListingSerializer(read_only = True)
     
     def get_user(self, obj):
         return CustomUserSerializer(obj.user)
@@ -103,18 +103,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Review
-        fields = {
-        'review_id',
+        fields = (
+        #'review_id',
         'user',
-        'property_listing',
+        'listing',
         'review_date',
         'review_rating',
-        'comment'
-        }
+        'comment',
+        )
         
         
 class MessageSerializer(serializers.ModelSerializer):
-    sender = serializers.SerializerMethodField()
+    sender = CustomUserSerializer(read_only = True)
     def get_sender(self, obj):
         return CustomUserSerializer(obj.user).data
     def get_recipient(self, obj):
