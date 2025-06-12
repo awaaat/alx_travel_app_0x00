@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import viewsets, status, filters
-from .models import *
+from .models import CustomUser
 from .serializers import *
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -10,19 +10,9 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['first_name', 'last_name'] 
     ordering_fields = ['-created_at']
-    
-    #We comment out the below, it is a repeat. ModelViewSet already handles CRUD operations
-    """
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    """
 
 class ListingViewSet(viewsets.ModelViewSet):
-    queryset = Listing.objects.filter(price_per_night__gt = 0)
+    queryset = Listing.objects.all()
     serializer_class = ListingSerializer
     search_fields = ['name', 'location', 'price_per_night']
     ordering_fields = ['-created_at']
@@ -52,7 +42,3 @@ class MessageViewSet(viewsets.ModelViewSet):
     ordering_fields = ['sent_at']
         
 
-
-@api_view(['GET'])
-def index(request):
-    return Response({"message": "Welcome to ALX Travel App!"})

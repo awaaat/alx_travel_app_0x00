@@ -11,6 +11,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'phone_number',
             'profile_image',
             'user_role',
+            'bio',
         )
 class ListingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,21 +19,20 @@ class ListingSerializer(serializers.ModelSerializer):
         fields = (
             'property_id',
             'name',
+            'host',
             'description',
             'location',
             'price_per_night',
             'created_at',
+            'capacity',
+            'amenities',
+            'availability',
         )
 class BookingSerializer(serializers.ModelSerializer):
     
     listing = ListingSerializer(read_only = True)
     user = CustomUserSerializer(read_only = True)
     total_price = serializers.SerializerMethodField()
-    
-    def get_listing(self, obj):
-        return ListingSerializer(obj.listing).data
-    def get_user(self, obj):
-        return CustomUserSerializer(obj.user).data
     
     class Meta:
         model = Booking
@@ -47,7 +47,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'total_price'
         )
         
-    def get_total_price(self, obj):
+    def get_total_price(self, obj) -> float:
         return obj.get_total_price
         
     def validate(self, data):
@@ -65,19 +65,17 @@ class BookingSerializer(serializers.ModelSerializer):
         
 class PaymentSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer(read_only = True)
-    
-    def get_user(self, obj):
-        return CustomUserSerializer(obj.user).data
-    
+    booking = BookingSerializer(read_only = True)    
     class Meta:
         model = Payment
         fields = (
         'payment_id',
-        'booking_id',
-        'user',
         'amount',
         'payment_date',
         'payment_method',
+        'payment_status',
+        'user',
+        'booking',
         )
         
     def validate_amount(self, value):
@@ -95,40 +93,25 @@ class ReviewSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer(read_only = True)
     listing = ListingSerializer(read_only = True)
     
-    def get_user(self, obj):
-        return CustomUserSerializer(obj.user)
-    
-    def get_listing(self, obj):
-        return ListingSerializer(obj.listing).data
-    
     class Meta:
         model = Review
         fields = (
-        #'review_id',
-        'user',
-        'listing',
+        'review_id',
         'review_date',
         'review_rating',
         'comment',
+        'user',
+        'listing',
         )
-        
+    def validate_review_rating(self, value):
+        if not (1 <= value<= 5):
+            raise serializers.ValidationError("Review Must be Between 1 - 5")
+        return value
         
 class MessageSerializer(serializers.ModelSerializer):
     sender = CustomUserSerializer(read_only = True)
-    def get_sender(self, obj):
-        return CustomUserSerializer(obj.user).data
-    def get_recipient(self, obj):
-        return CustomUserSerializer(obj.recipient).data
-    def validate_message_body(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Message body cannot be blank")
-        return value
+    recipient = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
 
-    def validate_message_title(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Message title cannot be blank")
-        return value
-    
     class Meta:
         model = Message
         fields = (
@@ -139,5 +122,14 @@ class MessageSerializer(serializers.ModelSerializer):
         'message_title',
         'message_body'
         )
-        
+    def validate_message_body(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Message body cannot be blank")
+        return value
+
+    def validate_message_title(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Message title cannot be blank")
+        return value
+    
         
